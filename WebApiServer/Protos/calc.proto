@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option csharp_namespace = "WebApiServer.Protos";
+
+package calc;
+
+service Calculator {
+  rpc Sum (ValuesRequest) returns (ResultReply);
+  rpc Subtract(ValuesRequest) returns (ResultReply);
+}
+
+message ValuesRequest {
+  int64 value1 = 1;
+  int64 value2 = 2;
+}
+
+message ResultReply {
+  int64 result = 1;
+}
