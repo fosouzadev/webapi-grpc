@@ -5,7 +5,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddGrpc(options =>
 {
-    options.Interceptors.Add<StaticApiKeyInterceptor>();
+    // Static api key
+    //options.Interceptors.Add<StaticApiKeyInterceptor>();
+
+    // Token JWT
+    options.Interceptors.Add<KeycloakJwtTokenInterceptor>();
 });
 
 var app = builder.Build();
