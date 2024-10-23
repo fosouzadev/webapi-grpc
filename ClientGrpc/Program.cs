@@ -1,5 +1,6 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
+using Newtonsoft.Json;
 using WebApiServer.Protos;
 
 using GrpcChannel channel = GrpcChannel.ForAddress("http://localhost:5026");
@@ -11,7 +12,7 @@ Metadata headers = new()
     //{ "x-api-key", "28f1c1dc-50f9-4b3c-ba2f-91684d3d10b6" }
 
     // Token JWT
-    { "Authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJNbHJ6RXZ5WW0tZ0duc0JycTJQRXdfaG5SbURDRi05Qll5aGJScjZ4LUxFIn0.eyJleHAiOjE3MjkzNjI4MjksImlhdCI6MTcyOTM2MjUyOSwianRpIjoiYTE5YjlkNjgtNGI0My00MjhjLWE0OTUtODFiODUzOWZjMzE5IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy93ZWJhcGktZ3JwYyIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiI3YTkyYzFmMS01MjVjLTQwNmEtYWY0My05M2Q2ZWI0MTI0NDUiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJ3ZWJhcGktc2VydmVyIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIvKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy13ZWJhcGktZ3JwYyIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudEhvc3QiOiIxNzIuMTcuMC4xIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LXdlYmFwaS1zZXJ2ZXIiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE3LjAuMSIsImNsaWVudF9pZCI6IndlYmFwaS1zZXJ2ZXIifQ.V-Cd5exY8NHFSjKa_gRfHDpeIaC0ZFdVe3ubwiwtKmu2yli_psa3OeGD4MJkIhLpKbB6B9essh6zREo3K7BNAQ7lQzogfm0wXxpsUElrxp9py3p4XbZ1foYV5_IUMA6RZEBn3ylVmCN-rW48A_wbY3j6t5JG_vU7jqHIy0qVLEGwRYDCsnNCu_Vd30xtcU4ajWHMKgBw2BRYAJIvv9MuYliR3PoBbgtYpA7TGr9qKGCpyJfsglmlG0oHwGSFgP5s4i2btwpJdgtpIaCxheum0OAK4MG6SfMaw1jkzdPr0V3H-iHtOWCd_QbVdQ718gm9MXf_UsvdqRBlJ_zBY6pn1Q" }
+    { "Authorization", GetJwtToken().Result }
 };
 
 ResultReply replySum = await client.SumAsync(new ValuesRequest { Value1 = 4, Value2 = 5 }, headers);
@@ -19,3 +20,30 @@ Console.WriteLine("Result: " + replySum.Result);
 
 ResultReply replySubtract = await client.SubtractAsync(new ValuesRequest { Value1 = 4, Value2 = 5 }, headers);
 Console.WriteLine("Result: " + replySubtract.Result);
+
+
+static async Task<string> GetJwtToken()
+{
+    const string Realm = "";
+    const string clientId = "";
+    const string clientSecret = "";
+    const string scope = ""; 
+
+    HttpClient httpClient = new();
+    httpClient.BaseAddress = new Uri($"http://localhost:8080/realms/{Realm}/protocol/openid-connect/");
+
+    FormUrlEncodedContent content = new(new Dictionary<string, string>
+    {
+        { "grant_type", "client_credentials" },
+        { "client_id", clientId },
+        { "client_secret", clientSecret },
+        { "scope", scope },
+    });
+
+    HttpResponseMessage response = await httpClient.PostAsync("token", content);
+    string responseBodyJson = await response.Content.ReadAsStringAsync();
+    
+    dynamic jsonObject = JsonConvert.DeserializeObject<dynamic>(responseBodyJson);
+
+    return $"{jsonObject.token_type} {jsonObject.access_token}";
+}

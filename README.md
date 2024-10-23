@@ -7,10 +7,12 @@ Web Api simples utilizada no estudo do gRPC.
 dotnet new sln -n WebApiGrpc
 ```
 
-### Servidor
+### Servidor gRPC
 ```csharp
 dotnet new grpc -n WebApiServer
 dotnet sln add ./WebApiServer/
+dotnet add package Microsoft.IdentityModel.Tokens
+dotnet add package System.IdentityModel.Tokens.Jwt
 ```
 
 Após criar o arquivo .proto e referenciar no csproj, basta compilar para converter em classes.
@@ -22,10 +24,16 @@ dotnet sln add ./ClientGrpc/
 dotnet add package Grpc.Net.Client
 dotnet add package Google.Protobuf
 dotnet add package Grpc.Tools
+dotnet add package Newtonsoft.json
 ```
 
+### Autenticação
+Realizei testes com dois tipos de autenticação:
+* Static Api Key: valor fixo validado via interceptor;
+* Token JWT: token gerado pelo keycloak validado via interceptor.
+
 ## Container do Keycloak
-[Documentação completa.](https://www.keycloak.org/documentation)
+Utilizado o Keycloak como container no docker para gerar o token JWT. [Documentação completa.](https://www.keycloak.org/documentation)
 
 Executar como container:
 ```

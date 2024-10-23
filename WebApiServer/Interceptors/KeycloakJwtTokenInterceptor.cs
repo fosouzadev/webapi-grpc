@@ -1,5 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Text;
+using System.Security.Cryptography;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 using Microsoft.IdentityModel.Tokens;
@@ -34,15 +34,19 @@ public class KeycloakJwtTokenInterceptor(IConfiguration configuration) : Interce
 
         try
         {
+            byte[] keyBytes = Convert.FromBase64String(configuration["Auth:Jwt:PublicKey"]);
+            RSA rsa = RSA.Create();
+            rsa.ImportSubjectPublicKeyInfo(keyBytes, out _);
+
             TokenValidationParameters validationParameters = new()
             {
                 ValidateIssuer = true,
-                ValidIssuer = configuration["Auth:Jwt:Issuer"],
                 ValidateAudience = true,
-                ValidAudience = configuration["Auth:Jwt:Audience"],
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Auth:Jwt:SecretKey"])),
-                ValidateLifetime = true
+                ValidateLifetime = true,
+                ValidIssuer = configuration["Auth:Jwt:Issuer"],
+                ValidAudience = configuration["Auth:Jwt:Audience"],
+                IssuerSigningKey = new RsaSecurityKey(rsa)
             };
 
             new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out SecurityToken validatedToken);
