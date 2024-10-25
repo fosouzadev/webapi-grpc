@@ -27,7 +27,6 @@ static async Task<string> GetJwtTokenAsync()
     const string Realm = "";
     const string clientId = "";
     const string clientSecret = "";
-    const string scope = ""; 
 
     HttpClient httpClient = new();
     httpClient.BaseAddress = new Uri($"http://localhost:8080/realms/{Realm}/protocol/openid-connect/");
@@ -36,8 +35,7 @@ static async Task<string> GetJwtTokenAsync()
     {
         { "grant_type", "client_credentials" },
         { "client_id", clientId },
-        { "client_secret", clientSecret },
-        { "scope", scope },
+        { "client_secret", clientSecret }
     });
 
     HttpResponseMessage response = await httpClient.PostAsync("token", content);
