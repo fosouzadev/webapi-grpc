@@ -1,6 +1,11 @@
 # Web Api gRPC
 Web Api simples utilizada no estudo do gRPC.
 
+## Autenticação
+A aplicação tem disponível dois tipos de autenticação:
+* Static Api Key: valor fixo validado via interceptor;
+* Token JWT: token gerado pelo keycloak validado via interceptor.
+
 ## Comandos utilizados para criação dos projetos
 ### Solution
 ```csharp
@@ -27,27 +32,38 @@ dotnet add package Grpc.Tools
 dotnet add package Newtonsoft.json
 ```
 
-### Autenticação
-Realizei testes com dois tipos de autenticação:
-* Static Api Key: valor fixo validado via interceptor;
-* Token JWT: token gerado pelo keycloak validado via interceptor.
-
 ## Container do Keycloak
-Utilizado o Keycloak como container no docker para gerar o token JWT. [Documentação completa.](https://www.keycloak.org/documentation)
+Documentação para criar [container do Keycloak](https://www.keycloak.org/getting-started/getting-started-docker).
 
-Executar como container:
-```
-docker run -d -p 8080:8080 --name keycloak-server -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:26.0.1 start-dev
-```
-# Autenticar e obter token de usuário
-Siga essa [documentação](https://www.keycloak.org/getting-started/getting-started-docker) para gerenciar os usuários.
+## Configurações do Keycloak
+Crie um novo `Realm`.
 
-Url de login no realm criado, com o usuário criado
-```
-http://localhost:8080/realms/webapi-grpc/account
-```
+Em `Clients`, crie um novo cliente para representar a aplicação. Defina as seguintes configurações:
+* Informe um `Client ID`;
+* Defina a chave `Client authentication` para `On`;
+* Defina a chave `Authorization` para `On`;
+* Desmarque as caixas de seleção `Standard flow` e `Direct access grants`.
 
-Url de teste de login no client criado
-```
-https://www.keycloak.org/app/
-```
+Nas configurações do cliente, na aba `Client scopes`, faça as seguintes configurações:
+* Exclua todos os escopos que são adicionados por padrão;
+* Entre no escopo `{ClientName}-dedicated` e faça as seguintes configurações:
+    * Adicione um novo `mapper` do tipo `By configuration` chamado `Audience`. Defina um nome e selecione sua aplicação no campo `Included Client Audience`, verifique se está marcado `On` para adicionar no token;
+
+Nas configurações do cliente, na aba `Credentials`, salve o valor do `Client secret`, será necessário para gerar o token JWT.
+
+## Gerar token JWT
+Utilizando o [Postman](https://www.postman.com/downloads/), crie uma nova requisição do tipo `POST`.
+
+Url: `http://localhost:8080/realms/{RealmName}/protocol/openid-connect/token`
+
+Body: Selecione `x-www-form-urlencoded`, com as seguintes chaves:
+* grant_type: `client_credentials`
+* client_id: `{ClientName}`
+* client_secret: `{ClientSecret}`
+
+Utilizando o site [jwt.io](https://jwt.io/), é possível visualizar o conteúdo do token.
+
+## Configurações da aplicação
+No arquivo `appsettings.json`, informe os valores para `{RealmName}`, `{Audience}` e `{PublicKey}`.
+
+No arquivo `Program.cs`, defina qual opção de autenticação irá utilizar na aplicação `Server` e `Client`.

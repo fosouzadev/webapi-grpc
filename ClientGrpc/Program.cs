@@ -12,7 +12,7 @@ Metadata headers = new()
     //{ "x-api-key", "28f1c1dc-50f9-4b3c-ba2f-91684d3d10b6" }
 
     // Token JWT
-    { "Authorization", GetJwtToken().Result }
+    { "Authorization", GetJwtTokenAsync().Result }
 };
 
 ResultReply replySum = await client.SumAsync(new ValuesRequest { Value1 = 4, Value2 = 5 }, headers);
@@ -22,7 +22,7 @@ ResultReply replySubtract = await client.SubtractAsync(new ValuesRequest { Value
 Console.WriteLine("Result: " + replySubtract.Result);
 
 
-static async Task<string> GetJwtToken()
+static async Task<string> GetJwtTokenAsync()
 {
     const string Realm = "";
     const string clientId = "";
